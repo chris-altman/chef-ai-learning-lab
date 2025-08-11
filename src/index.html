@@ -4,237 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chef AI Learning Lab 👨‍🍳🤖</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2d3436;
-            --secondary-color: #0984e3;
-            --accent-color: #00b894;
-            --background-color: #f5f6fa;
-            --text-color: #2d3436;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
-        body {
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: var(--primary-color);
-        }
-
-        .input-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-
-        .ingredients-input {
-            width: 100%;
-            padding: 1rem;
-            font-size: 1.1rem;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-        }
-
-        button {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #0873c4;
-        }
-
-        .ai-thinking {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            min-height: 200px;
-        }
-
         .thought-bubble {
-            position: relative;
-            background: #f0f7ff;
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1rem;
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.5s ease;
         }
-
+        
         .thought-bubble.active {
             opacity: 1;
             transform: translateY(0);
         }
-
-        .skill-level {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+        
+        .ingredient-node {
+            fill: #4299e1;
+            stroke: #2b6cb0;
+            stroke-width: 2px;
         }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #ddd;
-            border-radius: 10px;
-            overflow: hidden;
+        
+        .ingredient-link {
+            stroke: #a0aec0;
+            stroke-opacity: 0.6;
         }
-
-        .progress {
-            width: 0%;
-            height: 100%;
-            background: var(--accent-color);
-            transition: width 0.5s ease;
+        
+        .technique-node {
+            fill: #48bb78;
+            stroke: #2f855a;
         }
-
-        .history-section {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .recipe-suggestion {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-
-        .confidence-indicator {
-            display: inline-block;
-            padding: 0.3rem 0.6rem;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            margin-left: 1rem;
-        }
-
-        @keyframes thinking {
-            0% { opacity: 0.5; }
-            50% { opacity: 1; }
-            100% { opacity: 0.5; }
-        }
-
-        .thinking {
-            animation: thinking 1.5s infinite;
+        
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Chef AI Learning Lab 👨‍🍳🤖</h1>
-            <p>Watch as I learn and evolve my cooking skills through our interactions!</p>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Chef AI Learning Lab 👨‍🍳🤖</h1>
+            <p class="text-xl text-gray-600">Watch as I learn and evolve through our culinary journey!</p>
         </header>
 
-        <section class="input-section">
-            <input type="text" 
-                   class="ingredients-input" 
-                   placeholder="Enter your available ingredients (comma-separated)"
-                   id="ingredientsInput">
-            <button onclick="generateRecipe()">Generate Recipe</button>
-        </section>
-
-        <section class="ai-thinking" id="aiThinking">
-            <h2>AI Thought Process</h2>
-            <div id="thoughtBubbles"></div>
-        </section>
-
-        <section class="skill-level">
-            <h2>Current Skill Level</h2>
-            <div class="progress-bar">
-                <div class="progress" id="skillProgress"></div>
+        <!-- Input Section -->
+        <section class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="ingredientsInput">
+                    Available Ingredients
+                </label>
+                <input type="text" 
+                       id="ingredientsInput"
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                       placeholder="Enter ingredients (comma-separated)">
             </div>
-            <p id="skillLevel">Current Level: Beginner Chef</p>
+            <button onclick="generateRecipe()" 
+                    class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                Generate Recipe
+            </button>
         </section>
 
-        <section class="history-section">
-            <h2>Learning History</h2>
-            <div id="recipeHistory"></div>
+        <!-- AI Thinking Visualization -->
+        <section class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">AI Thought Process</h2>
+            <div id="thoughtBubbles" class="space-y-4"></div>
+        </section>
+
+        <!-- Learning Visualizations -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Ingredient Network -->
+            <section class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Ingredient Relationships</h2>
+                <div id="ingredientNetwork" class="chart-container"></div>
+            </section>
+
+            <!-- Learning Progress -->
+            <section class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Learning Progress</h2>
+                <div id="learningProgress" class="chart-container"></div>
+            </section>
+        </div>
+
+        <!-- Technique Graph -->
+        <section class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Cooking Techniques Graph</h2>
+            <div id="techniqueGraph" class="chart-container"></div>
+        </section>
+
+        <!-- Recipe History -->
+        <section class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Recipe History</h2>
+            <div id="recipeHistory" class="space-y-4"></div>
         </section>
     </div>
 
     <script>
-        // AI Chef's knowledge base
-        const aiChef = {
-            skillLevel: 0,
-            recipeHistory: [],
-            knowledgeBase: new Set(),
-            confidenceLevel: 0,
-            
-            // Skill levels
-            skillLevels: [
-                "Beginner Chef",
-                "Home Cook",
-                "Skilled Cook",
-                "Advanced Chef",
-                "Master Chef"
-            ],
+        // API endpoints
+        const API_BASE = 'http://localhost:8000/api';
+        
+        // State management
+        let currentRecipe = null;
+        let learningHistory = [];
+        
+        // Initialize visualizations
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeVisualizations();
+            fetchLearningStats();
+        });
 
-            // Basic recipe templates
-            recipeTemplates: {
-                beginner: [
-                    "Simple {protein} with {vegetable}",
-                    "Basic {protein} sandwich",
-                    "Easy {vegetable} stir-fry"
-                ],
-                intermediate: [
-                    "{protein} {cooking_method} with {sauce} sauce",
-                    "{protein} and {vegetable} medley",
-                    "Homemade {protein} {cuisine_style}"
-                ],
-                advanced: [
-                    "Gourmet {protein} with {sauce} reduction",
-                    "{cuisine_style} inspired {protein} with {vegetable}",
-                    "Deconstructed {protein} {dish_type}"
-                ]
+        async function generateRecipe() {
+            const ingredients = document.getElementById('ingredientsInput').value
+                .split(',')
+                .map(i => i.trim())
+                .filter(i => i.length > 0);
+
+            if (ingredients.length === 0) {
+                alert('Please enter some ingredients!');
+                return;
             }
-        };
 
-        // Simulate AI thinking process
+            try {
+                // Show thinking process
+                await simulateThinking(ingredients);
+
+                // Generate recipe
+                const response = await fetch(`${API_BASE}/generate_recipe`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ingredients })
+                });
+
+                const recipe = await response.json();
+                currentRecipe = recipe;
+                
+                // Update visualizations
+                updateRecipeDisplay(recipe);
+                updateLearningVisuals();
+                
+            } catch (error) {
+                console.error('Error generating recipe:', error);
+                alert('Error generating recipe. Please try again.');
+            }
+        }
+
         async function simulateThinking(ingredients) {
             const thoughts = [
-                "Analyzing available ingredients...",
-                "Checking flavor combinations...",
-                "Considering cooking techniques...",
+                "Analyzing ingredients...",
+                "Checking flavor compatibility...",
+                "Considering technique combinations...",
                 "Evaluating recipe complexity...",
-                "Finalizing recipe suggestion..."
+                "Generating recipe suggestion..."
             ];
 
             const thoughtBubbles = document.getElementById('thoughtBubbles');
@@ -243,116 +163,197 @@
             for (let thought of thoughts) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 const bubble = document.createElement('div');
-                bubble.className = 'thought-bubble';
+                bubble.className = 'thought-bubble bg-blue-50 p-4 rounded-lg';
                 bubble.textContent = thought;
                 thoughtBubbles.appendChild(bubble);
                 setTimeout(() => bubble.classList.add('active'), 100);
             }
         }
 
-        // Generate recipe based on ingredients
-        async function generateRecipe() {
-            const ingredientsInput = document.getElementById('ingredientsInput');
-            const ingredients = ingredientsInput.value.split(',').map(i => i.trim());
+        function initializeVisualizations() {
+            // Initialize D3.js force-directed graph for ingredients
+            const svg = d3.select('#ingredientNetwork')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%');
 
-            if (ingredients.length === 0 || ingredients[0] === '') {
-                alert('Please enter some ingredients!');
-                return;
+            // Initialize Plotly.js for learning progress
+            const progressData = [{
+                x: [],
+                y: [],
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Skill Level'
+            }];
+
+            Plotly.newPlot('learningProgress', progressData, {
+                margin: { t: 0, b: 30, l: 30, r: 30 },
+                xaxis: { title: 'Time' },
+                yaxis: { title: 'Skill Level' }
+            });
+
+            // Initialize technique graph
+            initializeTechniqueGraph();
+        }
+
+        function initializeTechniqueGraph() {
+            const svg = d3.select('#techniqueGraph')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%');
+
+            // We'll update this with real data from the API
+            const dummyData = {
+                nodes: [],
+                links: []
+            };
+
+            const simulation = d3.forceSimulation(dummyData.nodes)
+                .force('link', d3.forceLink(dummyData.links))
+                .force('charge', d3.forceManyBody())
+                .force('center', d3.forceCenter(300, 150));
+        }
+
+        async function fetchLearningStats() {
+            try {
+                const response = await fetch(`${API_BASE}/learning_stats`);
+                const stats = await response.json();
+                updateLearningStats(stats);
+            } catch (error) {
+                console.error('Error fetching learning stats:', error);
             }
-
-            // Simulate AI thinking
-            await simulateThinking(ingredients);
-
-            // Generate recipe
-            const recipe = generateRecipeLogic(ingredients);
-
-            // Update history
-            updateHistory(recipe, ingredients);
-
-            // Update skill level
-            updateSkillLevel();
         }
 
-        // Generate recipe based on current skill level and ingredients
-        function generateRecipeLogic(ingredients) {
-            const skillIndex = Math.floor(aiChef.skillLevel / 20); // 0-4
-            let template;
-
-            if (skillIndex < 2) {
-                template = aiChef.recipeTemplates.beginner[Math.floor(Math.random() * aiChef.recipeTemplates.beginner.length)];
-            } else if (skillIndex < 4) {
-                template = aiChef.recipeTemplates.intermediate[Math.floor(Math.random() * aiChef.recipeTemplates.intermediate.length)];
-            } else {
-                template = aiChef.recipeTemplates.advanced[Math.floor(Math.random() * aiChef.recipeTemplates.advanced.length)];
-            }
-
-            // Simple template filling
-            const recipe = template
-                .replace('{protein}', ingredients.find(i => isProtein(i)) || 'mixed')
-                .replace('{vegetable}', ingredients.find(i => isVegetable(i)) || 'seasonal vegetables')
-                .replace('{sauce}', generateSauce())
-                .replace('{cuisine_style}', generateCuisineStyle())
-                .replace('{dish_type}', generateDishType());
-
-            return recipe;
-        }
-
-        // Helper functions for recipe generation
-        function isProtein(ingredient) {
-            const proteins = ['chicken', 'beef', 'fish', 'tofu', 'pork', 'eggs'];
-            return proteins.some(p => ingredient.toLowerCase().includes(p));
-        }
-
-        function isVegetable(ingredient) {
-            const vegetables = ['carrot', 'broccoli', 'spinach', 'tomato', 'potato'];
-            return vegetables.some(v => ingredient.toLowerCase().includes(v));
-        }
-
-        function generateSauce() {
-            const sauces = ['hollandaise', 'béchamel', 'demi-glace', 'red wine'];
-            return sauces[Math.floor(Math.random() * sauces.length)];
-        }
-
-        function generateCuisineStyle() {
-            const styles = ['French', 'Italian', 'Asian fusion', 'Mediterranean'];
-            return styles[Math.floor(Math.random() * styles.length)];
-        }
-
-        function generateDishType() {
-            const types = ['risotto', 'pasta', 'curry', 'stew'];
-            return types[Math.floor(Math.random() * types.length)];
-        }
-
-        // Update recipe history
-        function updateHistory(recipe, ingredients) {
-            const historyDiv = document.getElementById('recipeHistory');
-            const confidence = Math.min(100, Math.round(aiChef.skillLevel + Math.random() * 20));
-
-            const recipeElement = document.createElement('div');
-            recipeElement.className = 'recipe-suggestion';
-            recipeElement.innerHTML = `
-                <strong>${recipe}</strong>
-                <span class="confidence-indicator" 
-                      style="background-color: hsl(${confidence}, 70%, 50%, 0.2); 
-                             color: hsl(${confidence}, 70%, 30%);">
-                    ${confidence}% confidence
-                </span>
-                <p><small>Ingredients used: ${ingredients.join(', ')}</small></p>
-            `;
-
-            historyDiv.insertBefore(recipeElement, historyDiv.firstChild);
-            aiChef.recipeHistory.push({ recipe, ingredients, confidence });
-        }
-
-        // Update skill level
-        function updateSkillLevel() {
-            aiChef.skillLevel = Math.min(100, aiChef.skillLevel + Math.random() * 5);
-            const progress = document.getElementById('skillProgress');
-            const skillText = document.getElementById('skillLevel');
+        function updateLearningStats(stats) {
+            // Update ingredient network
+            updateIngredientNetwork(stats.known_ingredients);
             
-            progress.style.width = `${aiChef.skillLevel}%`;
-            const currentLevel = aiChef.skillLevels[Math.floor(aiChef.skillLevel / 20)];
-            skillText.textContent = `Current Level: ${currentLevel} (${Math.round(aiChef.skillLevel)}%)`;
+            // Update learning progress
+            updateLearningProgress(stats);
+            
+            // Update technique graph
+            updateTechniqueGraph(stats.known_techniques);
+        }
+
+        function updateIngredientNetwork(ingredients) {
+            // D3.js force-directed graph update
+            const svg = d3.select('#ingredientNetwork svg');
+            // ... Update with real ingredient relationship data
+        }
+
+        function updateLearningProgress(stats) {
+            const trace = {
+                x: learningHistory.map(h => h.timestamp),
+                y: learningHistory.map(h => h.skill_level),
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Skill Level'
+            };
+
+            Plotly.update('learningProgress', { y: [trace.y], x: [trace.x] });
+        }
+
+        function updateTechniqueGraph(techniques) {
+            // D3.js force-directed graph update for techniques
+            const svg = d3.select('#techniqueGraph svg');
+            // ... Update with real technique relationship data
+        }
+
+        function updateRecipeDisplay(recipe) {
+            const historyDiv = document.getElementById('recipeHistory');
+            const recipeElement = document.createElement('div');
+            recipeElement.className = 'bg-gray-50 rounded-lg p-6';
+            recipeElement.innerHTML = `
+                <h3 class="font-bold text-2xl mb-2">${recipe.recipe_name}</h3>
+                <p class="text-gray-600 italic mb-4">${recipe.description}</p>
+                
+                <div class="flex flex-wrap gap-4 mb-6">
+                    <p class="text-gray-600"><span class="font-semibold">Difficulty:</span> ${recipe.difficulty}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Total Time:</span> ${recipe.total_time}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Chef AI Confidence:</span> ${Math.round(recipe.confidence * 100)}%</p>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="font-bold text-lg mb-2">Ingredients:</h4>
+                    <ul class="list-disc list-inside space-y-1">
+                        ${recipe.ingredients.map(ing => 
+                            `<li class="ml-4 text-gray-800">${ing.amount} ${ing.item}${ing.preparation ? ` <span class="text-gray-600">(${ing.preparation})</span>` : ''}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="font-bold text-lg mb-2">Cooking Techniques:</h4>
+                    <p class="ml-4 text-gray-800">${recipe.techniques.join(', ')}</p>
+                </div>
+
+                <div class="mb-6">
+                    <h4 class="font-bold text-lg mb-2">Step-by-Step Instructions:</h4>
+                    <ol class="space-y-4">
+                        ${recipe.steps.map(step => `
+                            <li class="ml-4">
+                                <div class="mb-2">
+                                    <p class="font-medium text-gray-800">${step.step_number}. ${step.instruction}</p>
+                                    ${step.time ? `<p class="text-sm text-gray-600 mt-1">⏱️ Time: ${step.time}</p>` : ''}
+                                </div>
+                                ${step.tips ? `
+                                    <ul class="space-y-1 bg-blue-50 p-3 rounded-lg">
+                                        ${step.tips.map(tip => `
+                                            <li class="text-sm text-gray-700 flex items-start">
+                                                <span class="text-blue-500 mr-2">💡</span> ${tip}
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                ` : ''}
+                            </li>
+                        `).join('')}
+                    </ol>
+                </div>
+
+                ${recipe.suggested_sides && recipe.suggested_sides.length > 0 ? `
+                    <div class="mb-6">
+                        <h4 class="font-bold text-lg mb-2">Suggested Sides:</h4>
+                        <ul class="list-disc list-inside">
+                            ${recipe.suggested_sides.map(side => `<li class="ml-4 text-gray-800">${side}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                <div class="mt-6 flex items-center gap-4">
+                    <button onclick="rateRecipe(${recipe.id}, 1)" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg flex items-center">
+                        <span class="mr-2">👍</span> Good Recipe
+                    </button>
+                    <button onclick="rateRecipe(${recipe.id}, 0)" 
+                            class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg flex items-center">
+                        <span class="mr-2">👎</span> Needs Improvement
+                    </button>
+                </div>
+            `;
+            historyDiv.insertBefore(recipeElement, historyDiv.firstChild);
+        }
+
+        async function rateRecipe(recipeId, rating) {
+            if (!currentRecipe) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/learn`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipe_id: recipeId,
+                        ingredients: currentRecipe.ingredients,
+                        techniques: currentRecipe.techniques,
+                        rating: rating
+                    })
+                });
+
+                if (response.ok) {
+                    fetchLearningStats();  // Update visualizations
+                }
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+            }
         }
     </script>
 </body>
